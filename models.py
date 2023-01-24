@@ -1,5 +1,5 @@
 from flask_bcrypt import Bcrypt
-from app import db
+from config import db
 import uuid
 from datetime import datetime
 from sqlalchemy.orm import  backref
@@ -22,10 +22,7 @@ user_video = db.Table('user_video',
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement= True)
-    fullname = db.Column(db.String(255),nullable=False)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    phoneNumber = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(255), unique=True, nullable=False)
+    s
     workouts = db.relationship('Workout', backref=backref('users'))
     payment = db.relationship('Payment', backref=backref('users'))
         

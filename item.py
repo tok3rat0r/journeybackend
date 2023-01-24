@@ -1,4 +1,4 @@
-from app import ma
+from config import ma
 from models import *
 from flask_marshmallow import fields
 

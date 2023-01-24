@@ -6,7 +6,7 @@ from flask_restful import Resource
 from flask_bcrypt import bcrypt
 import re
 from datetime import datetime
-from app import app
+from config import app
 
 
 
