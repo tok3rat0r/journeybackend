@@ -5,7 +5,7 @@ from item import StreaksSchema, UserSchema, WorkoutSchema, PaymetSchema, Subscri
 from flask_restful import Resource
 from flask_bcrypt import bcrypt
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from app import app
 
 
