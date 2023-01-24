@@ -10,7 +10,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 app = Flask(__name__)
 
 #Database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost:5433/journey' 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/journey' 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost:8889/journey'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECURITY_PASSWORD_HASH']='bcrypt'
