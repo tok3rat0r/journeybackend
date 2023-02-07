@@ -22,7 +22,10 @@ user_video = db.Table('user_video',
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement= True)
-    s
+    fullname = db.Column(db.String(255), nullable = False)
+    email = db.Column(db.String(255), nullable = False)
+    phoneNumber = db.Column(db.String(20),nullable =False )
+    password = db.Column(db.String(), nullable = False)
     workouts = db.relationship('Workout', backref=backref('users'))
     payment = db.relationship('Payment', backref=backref('users'))
         

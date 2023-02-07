@@ -152,13 +152,6 @@ class Login(Resource):
         return {'token': token.decode('UTF-8')}, 200
 
 
-
-
-
-
-
-
-
 @api.resource('/workouts', "/workouts/<id>")
 class Workouts(Resource):
     @classmethod
