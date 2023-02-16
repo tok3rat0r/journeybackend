@@ -1,6 +1,5 @@
 from config import ma
 from models import *
-from flask_marshmallow import fields
 
 #User-schema
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -8,9 +7,6 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         model = User
         include_fk = True
         load_instance = True
-    # fullname = fields.String()
-    # email =fields.String()
-    # phoneNumber = fields.String()
         
         
 #workout-schema

@@ -3,7 +3,6 @@ from config import db
 import uuid
 from datetime import datetime
 from sqlalchemy.orm import  backref
-from marshmallow import ValidationError, pre_load
 # from sqlalchemy.dialects.postgresql import JSON
 
 def generate_uuid():
