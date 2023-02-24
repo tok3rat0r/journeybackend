@@ -41,22 +41,30 @@ streaks_schema = StreaksSchema(many=True)
 
 @api.resource("/users")
 class UserList(Resource):
-    @staticmethod
     def get():
         return users_schema.dump(User.find_all()), 200
 
-    @staticmethod
-    def put():
-        users_json = request.get_json()
-        users_data = users_schema.load(users_json)
-        user = User.find_by_email()
-        # User.query.filter_by()
-        if user:
-            return jsonify('redirect back to sigin up')
-        users_data.save_to_db()
-        return users_schema.dump(users_data), 200
+    def put(id):
+        user_json = request.get_json()
+        if not user_json:
+            return {'message': "No input data provided"}, 400
+        try:
+            user_data = user_schema.load(user_json)
+            if not re.match(r'[^@]+@[^@]+\.[^@]+', user_data.email):
+                return 'Invalid email', 400
+        except ValidationError as err:
+            return err.messages, 422
+        user = User.find_by_id(id)
+        if not user:
+            return {'message': USER_NOT_FOUND}, 404
+        user.email = user_data.email
+        user.fullname = user_data.fullname
+        user.phoneNumber = user_data.phoneNumber
+        user.password = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt())
+        user.save_to_db()
+        return user_schema.dump(user), 200
+
     
-    @staticmethod
     def delete():
         users_to_delete = User.find_by_id(id)
         users_to_delete.delete_from_db()
@@ -64,8 +72,7 @@ class UserList(Resource):
 
 @api.resource("/user", "/user/<int:id>")
 class Users(Resource):
-    @staticmethod
-    def post(self):
+    def post():
         user_json= request.get_json()
         if not user_json:
             return {'message': 'No input data provided'}, 400
@@ -77,18 +84,16 @@ class Users(Resource):
         hashed_password = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt())
         user = User(fullname=user_data.fullname, email=user_data.email, phoneNumber=user_data.phoneNumber, password=hashed_password)
         user.save_to_db()
-        return user_schema.dump(user), 200
+        return user_schema.dump(user), 201
 
-    @staticmethod
-    def get(self, id):
+    def get(id):
         user_data = User.find_by_id(id)
         if user_data:
             return user_schema.dump(user_data)
         return {'message': USER_NOT_FOUND}, 404
 
 
-    @staticmethod
-    def put(self):
+    def put():
         user_json = request.get_json()
         if not user_json:
             return {'message':"No input data provided"}, 400
@@ -103,15 +108,14 @@ class Users(Resource):
         user.save_to_db()
         return user_schema.dump(user), 200
 
-    @staticmethod
-    def delete(self,id):
+    def delete(id):
         users_to_delete = User.find_by_id(id)
         users_to_delete.delete_from_db()
         return jsonify({"message":"User Deleted Successfully"}), 204
 
 # @api.resource("/user/login")
 # class Login(Resource):
-#     @staticmethod
+#
 #     def post(self):
 #         data = request.get_json()
 #         try:
@@ -137,61 +141,61 @@ class Users(Resource):
 
 @api.resource("/workouts", "/workouts/<id>")
 class Workouts(Resource):
-    @staticmethod
-    def get(self,id):
+    def get(id):
         workout = Workout.find_by_id(id)
         if not workout:
             return {'message': 'workout not found'}, 404
         return workout_schema.dump(workout)
         # (Workout.find_all()), 200
 
-    @staticmethod
-    def post(self):
+    def post():
         workout_json = request.get_json()
         workout_data = workout_schema.load(workout_json)
         workout_data.save_to_db()
         return workout_schema.dump(workout_data), 200
 
-    @staticmethod
-    def delete(self, id):
+    def delete(id):
         workout_data = Workout.find_by_id(id)
         if workout_data:
             workout_data.delete_from_db()
             return {'message': "Workout Deleted successfully"}, 200
         return {'status': WORKOUT_NOT_FOUND}
     
-    @staticmethod
-    def put(self, id):
+    def put(id):
         workout_data = request.get_json()
-        workout = Workout.find_by_id(id)
-        if not workout:
-            return {'message': 'workout not found'}, 404
-        workout.total_time = workout_data.total_time
-        workout.username_id = workout_data.username_id 
-        workout.calories = workout_data.calories
-        workout.strikes = workout_data.strikes
-        return workout_schema.dump(workout), 200
+        if not workout_data:
+            return {'message': "No input data provided"}, 400
+        try:
+            workout = Workout.find_by_id(id)
+            if not workout:
+                return {'message': WORKOUT_NOT_FOUND}, 404
+            workout_data = workout_schema.load(workout_data)
+            workout.title = workout_data.title
+            workout.description = workout_data.description
+            workout.duration = workout_data.duration
+            workout.save_to_db()
+            return workout_schema.dump(workout), 200
+        except ValidationError as err:
+            return err.messages, 422
+
 
 
 @api.resource("/payment")
 class Payments(Resource):
-    @staticmethod
-    def get(self,id):
+    def get(id):
         payment = Payment.find_by_id(id)
         if not payment:
             return {'message': 'Payment not found'}, 404
         return payment_schema.dump(payment), 200        
 
-    @staticmethod
-    def post(self):
+    def post():
         payment_json = request.get_json()
         payment_data = payment_schema.load(payment_json)
         payment_data.save_to_db()
         return payment_schema.dump(payment_data), 200
     
 
-    @staticmethod
-    def put(self):
+    def put():
         payment_json = request.get_json()
         payment_data = payment_schema.load(payment_json)
         payment = Payment.find_by_id(payment_data.id)
@@ -200,7 +204,6 @@ class Payments(Resource):
         payment.save_to_db()
         return payment_schema.dump(payment_data), 200
 
-    @staticmethod
     def delete(id):
         payment_to_delete = Payment.find_by_id(id)
         payment_to_delete.delete_from_db()
@@ -208,21 +211,18 @@ class Payments(Resource):
 
 @api.resource("/subscriprtion")
 class Subscriptions(Resource):
-    @staticmethod
     def get(id):
         subscription = Subscription.find_by_id(id)
         if not subscription:
             return {'message': 'Subscription not found'}, 404
         return subscription_schema.dump(subscription), 200
 
-    @staticmethod
-    def post(self):
+    def post():
         subscription_json = request.get_json()
         subscription_data = subscription_schema.load(subscription_json)
         subscription_data.save_to_db()
         return subscription_schema.dump(subscription_data), 200
 
-    @staticmethod
     def put():
         subscription_json = request.get_json()
         subscription_data = subscription_schema.load(subscription_json)
@@ -232,7 +232,6 @@ class Subscriptions(Resource):
         subscription.save_to_db()
         return subscription_schema.dump(subscription_data), 200
 
-    @staticmethod
     def delete(id):
         subscription_to_delete = Subscription.find_by_id(id)
         subscription_to_delete.delete_from_db()
@@ -241,22 +240,19 @@ class Subscriptions(Resource):
 
 @api.resource("/video")
 class Videos(Resource):
-    @staticmethod
-    def get(self,id):
+    def get(id):
         video = Video.find_by_id(id)
         if not video:
             return {'message': 'Video not found'}, 404
         return video_schema.dump(video), 200
     
-    @staticmethod
-    def post(self):
+    def post():
         video_json = request.get_json()
         video_data = video_schema.load(video_json)
         video_data.save_to_db()
         return video_schema.dump(video_data), 200
 
-    @staticmethod
-    def put(self):
+    def put():
         video_json = request.get_json()
         video_data = video_schema.load(video_json)
         video = Video.find_by_id(video_data.id)
@@ -265,8 +261,7 @@ class Videos(Resource):
         video.save_to_db()
         return video_schema.dump(video_data), 200
 
-    @staticmethod
-    def delete(self,id):
+    def delete(id):
         video_to_delete = Video.find_by_id(id)
         video_to_delete.delete_from_db()
         return jsonify({"message":"Video Deleted Successfully"}),204
@@ -328,19 +323,16 @@ class Videos(Resource):
 
 @api.resource('/streaks')
 class Streak(Resource):
-    @staticmethod
-    def get(self):
+    def get():
         return streaks_schema.dump(Streak.find_all()), 200
     
-    @staticmethod
-    def post(self):
+    def post():
         streak_json = request.get_json()
         streak_data = streak_schema.load(streak_json)
         streak_data.save_to_db()
         return streak_schema.dump(streak_data), 200
 
-    @staticmethod
-    def delete(self):
+    def delete():
         Streak.delete_all()
         return jsonify({"message":"All St"})
 

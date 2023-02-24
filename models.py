@@ -31,8 +31,6 @@ class User(db.Model):
     def __repr__(self):
         return f"<{self.id}>"
 
-
-
     @classmethod
     def find_by_email(cls, email):
         return cls.query.filter_by(email=email).first()
@@ -67,7 +65,6 @@ class Workout(db.Model):
 
     def __repr__(self):
         return f"<{self.workout_id}>"
-
 
     @classmethod
     def find_by_name(cls, username_id):
