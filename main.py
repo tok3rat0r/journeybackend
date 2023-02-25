@@ -1,12 +1,12 @@
-from flask import jsonify,request,session
+from flask import jsonify,request,session, Flask
 from marshmallow import ValidationError
-from models import *
+from models import User, Workout, Payment, Subscription, Video
 from  api import api
 from item import StreaksSchema, UserSchema, WorkoutSchema, PaymetSchema, SubscriptionSchema, VideoSchema
 from flask_restful import Resource
 from flask_bcrypt import bcrypt
 import re
-from datetime import datetime
+from config import * 
 
 USER_NOT_FOUND = "User not found."
 WORKOUT_NOT_FOUND = "Workout not found."
@@ -112,31 +112,6 @@ class Users(Resource):
         users_to_delete = User.find_by_id(id)
         users_to_delete.delete_from_db()
         return jsonify({"message":"User Deleted Successfully"}), 204
-
-# @api.resource("/user/login")
-# class Login(Resource):
-#
-#     def post(self):
-#         data = request.get_json()
-#         try:
-#             result = user_schema.load(data)
-#         except ValidationError as err:
-#             print(err.messages)
-#             return err.messages, 422
-
-#         hashed_password = bcrypt.hashpw(result.password.encode('utf-8'), bcrypt.gensalt())
-#         user = User.query.filter_by(email=result.email, password=hashed_password).first()
-
-#         if not user:
-#             return {'message': 'Invalid email or password'}, 401
-        
-#         # Create a JWT token for the user
-#         token = jwt.encode({
-#             'sub': user.id,
-#             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
-#         }, app.config['SECRET_KEY'])
-
-#         return {'token': token.decode('UTF-8')}, 200
 
 
 @api.resource("/workouts", "/workouts/<id>")
@@ -266,61 +241,6 @@ class Videos(Resource):
         video_to_delete.delete_from_db()
         return jsonify({"message":"Video Deleted Successfully"}),204
 
-
-# @app.route("/login", methods=['POST'])
-# def login():
-#     email = request.json['email']
-#     password = request.json['password']
-#     user = User.find_by_email(email=email)
-
-#     if user and bcrypt.check_password_hash(user.password, password):
-#         return jsonify({'user': user_schema.dump(user)})
-#     else:
-#         return jsonify({'error': 'Invalid email or password'}), 401
-
-# @app.route("/subscribe", methods=['POST'])
-# def subscribe():
-#     data = request.get_json()
-#     user_id = data['user_id']
-#     workout_id = data['workout_id']
-#     payment_info = data['payment_info']
-#     # Validate user's subscription
-#     user = User.query.filter_by(id=user_id).first()
-#     # user_schema = UserSchema()
-#     user = user_schema.load(user)
-
-#     if user is None:
-#         return jsonify({'error': 'User not found'}), 404
-
-#     # Check if the user has an active subscription
-#     active_subscription = False
-#     for payment in user.payments:
-#         if payment.end_time > datetime.now():
-#             active_subscription = True
-#             break
-
-#     if not active_subscription:
-#         return jsonify({'error': 'Please subscribe to access the workout'}), 401
-
-#     # Get workout details
-#     workout = Workout.query.filter_by(workout_id=workout_id).first()
-#     # workout_schema = WorkoutSchema()
-#     workout = workout_schema.load(workout)
-
-#     if workout is None:
-#         return jsonify({'error': 'Workout not found'}), 404
-
-#     # Allow user to watch the workout
-#     return jsonify({'message': 'Access granted', 'workout': workout_schema.dump(workout)})
-
-# @app.route("/watch-video/<int:video_id>", methods=["GET"])
-# def watch_video(video_id):
-#     user = User.find_by_id()
-#     # get_jwt_identity()
-#     if not user.has_valid_subscription():
-#         return jsonify({"error": "You must have a valid subscription to watch this video"}), 401
-#     # continue with serving the video
-
 @api.resource('/streaks')
 class Streak(Resource):
     def get():
@@ -337,43 +257,43 @@ class Streak(Resource):
         return jsonify({"message":"All St"})
 
     
-    # def post(self):
-    #     json_data = request.get_json()
-    #     data, errors = streak_schema.load(json_data)
-    #     if errors:
-    #         return errors, 422
-    #     user_id = json_data.get("user_id")
-    #     date = data.get("date")
-    #     # Save the date to the database for the given user
-    #     date.save_to_db()
-    #     user_id.save_to_db()
-    #     # save_date_to_db(user_id, date)
-    #     # Fetch the dates from the database for the given user
-    #     dates = user_id.find_all()
-    #     # dates = get_dates_from_db(user_id)
-    #     # Sort the dates in chronological order
-    #     dates.sort()
-    #     streak = 0
-    #     current_streak = 0
-    #     for i in range(len(dates)):
-    #         if i == 0:
-    #             current_streak += 1
-    #         else:
-    #             previous_date = dates[i-1]
-    #             current_date = dates[i]
-    #             if (current_date - previous_date).days == 1:
-    #                 current_streak += 1
-    #             else:
-    #                 streak = max(streak, current_streak)
-    #                 current_streak = 0
-    #     return {"streak": max(streak, current_streak)}
+    def post(self):
+        json_data = request.get_json()
+        data, errors = streak_schema.load(json_data)
+        if errors:
+            return errors, 422
+        user_id = json_data.get("user_id")
+        date = data.get("date")
+        # Save the date to the database for the given user
+        date.save_to_db()
+        user_id.save_to_db()
+        # save_date_to_db(user_id, date)
+        # Fetch the dates from the database for the given user
+        dates = user_id.find_all()
+        # dates = get_dates_from_db(user_id)
+        # Sort the dates in chronological order
+        dates.sort()
+        streak = 0
+        current_streak = 0
+        for i in range(len(dates)):
+            if i == 0:
+                current_streak += 1
+            else:
+                previous_date = dates[i-1]
+                current_date = dates[i]
+                if (current_date - previous_date).days == 1:
+                    current_streak += 1
+                else:
+                    streak = max(streak, current_streak)
+                    current_streak = 0
+        return {"streak": max(streak, current_streak)}
 
-# def save_date_to_db(user_id, date):
+def save_date_to_db(user_id, date):
     # Save the date to the database for the given user
-    # pass
+    pass
 
-# def get_dates_from_db(user_id):
+def get_dates_from_db(user_id):
     # Fetch the dates from the database for the given user
     # Example: dates = [datetime(2022, 1, 1), datetime(2022, 1, 2), datetime(2022, 1, 3)]
     # return dates
-
+    pass
